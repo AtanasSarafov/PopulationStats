@@ -13,6 +13,6 @@ namespace PopulationStats.Data.Models
 
         public int? Population { get; set; }
 
-        public required State State { get; set; }
+        public virtual State State { get; set; } = null!;
     }
 }

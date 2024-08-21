@@ -7,7 +7,7 @@
 
         public CountryPopulation(string countryName, int population)
         {
-            CountryName = countryName;
+            CountryName = countryName ?? throw new ArgumentNullException(nameof(countryName));
             Population = population;
         }
     }

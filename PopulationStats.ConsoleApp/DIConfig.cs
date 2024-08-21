@@ -29,12 +29,13 @@ namespace PopulationStats.ConsoleApp
             // Caching and services registration
             services.AddMemoryCache();
             services.AddTransient<IStatService, ConcreteStatService>();
-            services.AddSingleton<IStatService, RealWorldStatService>(provider =>
-            {
-                var cache = provider.GetRequiredService<IMemoryCache>();
-                var logger = provider.GetRequiredService<ILogger<RealWorldStatService>>();
-                return new RealWorldStatService(cache, configuration, logger);
-            });
+            services.AddHttpClient<IStatService, RealWorldStatService>()
+                .ConfigureHttpClient((provider, client) =>
+                {
+                    var configuration = provider.GetRequiredService<IConfiguration>();
+                    var apiUrl = configuration.GetValue<string>("CountriesApiUrl") ?? "https://restcountries.com/v3.1/all";
+                    client.BaseAddress = new Uri(apiUrl);
+                });
 
             // Population Aggregator setup
             services.AddTransient<IPopulationAggregator, PopulationAggregator>(provider =>

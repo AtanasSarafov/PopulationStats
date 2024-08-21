@@ -11,7 +11,6 @@ namespace PopulationStats.ConsoleApp.Tests
         [Fact]
         public async Task Main_ShouldLogErrorOnException()
         {
-            // Arrange
             var mockDIConfig = new Mock<IDIConfig>();
 
             var serviceCollection = new ServiceCollection();
@@ -30,10 +29,8 @@ namespace PopulationStats.ConsoleApp.Tests
 
             var program = new Program(mockDIConfig.Object);
 
-            // Act
             await program.Run();
 
-            // Assert
             mockLogger.Setup(x =>
                 x.Log(
                     LogLevel.Error,
@@ -46,9 +43,8 @@ namespace PopulationStats.ConsoleApp.Tests
         [Fact]
         public async Task PrintTotalPopulationByCountry_ShouldPrintCorrectOutput()
         {
-            // Arrange
             var mockAggregator = new Mock<IPopulationAggregator>();
-            var expectedPopulations = new Dictionary<string, int>
+            var expectedPopulations = new Dictionary<string, int?>
             {
                 { "CountryA", 1000 },
                 { "CountryB", 2000 }
@@ -60,10 +56,8 @@ namespace PopulationStats.ConsoleApp.Tests
             using var stringWriter = new StringWriter();
             Console.SetOut(stringWriter);
 
-            // Act
             await Program.PrintTotalPopulationByCountry(mockAggregator.Object);
 
-            // Assert
             var output = stringWriter.ToString();
             Assert.Contains("CountryA: 1000", output);
             Assert.Contains("CountryB: 2000", output);
@@ -73,22 +67,21 @@ namespace PopulationStats.ConsoleApp.Tests
         [Fact]
         public async Task PrintPopulationDetails_ShouldPrintCorrectOutput()
         {
-            // Arrange
             var mockAggregator = new Mock<IPopulationAggregator>();
-            var populationDetails = new Dictionary<string, Dictionary<string, Dictionary<string, int>>>
+            var populationDetails = new Dictionary<string, Dictionary<string, Dictionary<string, int?>>>
             {
                 {
-                    "CountryA", new Dictionary<string, Dictionary<string, int>>
+                    "CountryA", new Dictionary<string, Dictionary<string, int?>>
                     {
                         {
-                            "StateA", new Dictionary<string, int>
+                            "StateA", new Dictionary<string, int?>
                             {
                                 { "CityA", 500 },
                                 { "CityB", 300 }
                             }
                         },
                         {
-                            "StateB", new Dictionary<string, int>
+                            "StateB", new Dictionary<string, int?>
                             {
                                 { "CityC", 200 }
                             }
@@ -103,10 +96,8 @@ namespace PopulationStats.ConsoleApp.Tests
             using var stringWriter = new StringWriter();
             Console.SetOut(stringWriter);
 
-            // Act
             await Program.PrintPopulationDetails(mockAggregator.Object);
 
-            // Assert
             var output = stringWriter.ToString();
             Assert.Contains("CountryA (1000):", output);
             Assert.Contains("\tStateA (800):", output);
