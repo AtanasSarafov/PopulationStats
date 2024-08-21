@@ -16,49 +16,39 @@ namespace PopulationStats.ConsoleApp
         {
             var serviceProvider = ConfigureServices();
 
-            using (var scope = serviceProvider.CreateScope())
+            using var scope = serviceProvider.CreateScope();
+            var services = scope.ServiceProvider;
+            var logger = services.GetRequiredService<ILogger<Program>>();
+
+            try
             {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var aggregator = services.GetRequiredService<IPopulationAggregator>();
+                var aggregator = services.GetRequiredService<IPopulationAggregator>();
 
-                    Console.WriteLine($"--- Population counts per country ---");
-                    await PrintTotalPopulationByCountry(aggregator);
-
-                    Console.WriteLine($"--- Population counts per country [FROM CACHE] ---");
-                    await PrintTotalPopulationByCountry(aggregator);
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while running the population aggregation.");
-                }
+                await DisplayPopulationDataAsync(aggregator, logger);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while running the population aggregation.");
             }
         }
 
         private static ServiceProvider ConfigureServices()
         {
+            var configuration = BuildConfiguration();
+
             var services = new ServiceCollection();
+            services.AddSingleton(configuration);
 
-            // Add configuration, logging, and other necessary services
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
-
-            services.AddSingleton<IConfiguration>(configuration);
-
+            // Logging setup
             services.AddLogging(configure => configure.AddConsole());
 
+            // Database setup
             services.AddDbContext<PopulationStatsDbContext>(options =>
                 options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
+            // Caching and services registration
             services.AddMemoryCache();
-
             services.AddTransient<IStatService, ConcreteStatService>();
-
             services.AddSingleton<IStatService, RealWorldStatService>(provider =>
             {
                 var cache = provider.GetRequiredService<IMemoryCache>();
@@ -66,6 +56,7 @@ namespace PopulationStats.ConsoleApp
                 return new RealWorldStatService(cache, configuration, logger);
             });
 
+            // Population Aggregator setup
             services.AddTransient<IPopulationAggregator, PopulationAggregator>(provider =>
             {
                 var context = provider.GetRequiredService<PopulationStatsDbContext>();
@@ -76,20 +67,57 @@ namespace PopulationStats.ConsoleApp
             return services.BuildServiceProvider();
         }
 
-        // Prints the population counts per country.
-        private static async Task PrintTotalPopulationByCountry(IPopulationAggregator aggregator)
+        private static IConfiguration BuildConfiguration()
         {
-            var stopwatch = Stopwatch.StartNew();
-            var totalPopulations = await aggregator.GetTotalPopulationByCountryAsync();
-            stopwatch.Stop();
-
-            foreach (var kvp in totalPopulations)
-            {
-                Console.WriteLine($"{kvp.Key}: {kvp.Value}");
-            }
-            Console.WriteLine($"\nData aggregation completed in {stopwatch.ElapsedMilliseconds} ms.\n");
+            return new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
         }
 
+        private static async Task DisplayPopulationDataAsync(IPopulationAggregator aggregator, ILogger logger)
+        {
+            logger.LogInformation("Starting population aggregation.");
+
+            await MeasureAndDisplayPopulationDataAsync(
+                aggregator.GetTotalPopulationByCountryAsync,
+                "Population counts per country",
+                logger
+            );
+
+            await MeasureAndDisplayPopulationDataAsync(
+               aggregator.GetTotalPopulationByCountryAsync,
+               "[WITH CASHE] Population counts per country",
+               logger
+           );
+
+            logger.LogInformation("Population aggregation completed.");
+        }
+
+        private static async Task MeasureAndDisplayPopulationDataAsync(
+            Func<Task<Dictionary<string, int>>> fetchPopulationData,
+            string header,
+            ILogger logger)
+        {
+            logger.LogInformation($"--- {header} ---");
+
+            var stopwatch = Stopwatch.StartNew();
+            var populationData = await fetchPopulationData();
+            stopwatch.Stop();
+
+            DisplayPopulationByCountry(populationData);
+            logger.LogInformation($"Data aggregation completed in {stopwatch.ElapsedMilliseconds} ms.\n");
+        }
+
+        private static void DisplayPopulationByCountry(Dictionary<string, int> populationData)
+        {
+            foreach (var (country, population) in populationData)
+            {
+                Console.WriteLine($"{country}: {population}");
+            }
+        }
+
+        // TODO: For testing purposes. Remove when not needed.
         // Prints the population counts in  hierarchical format.
         private static async Task PrintPopulationDetails(IPopulationAggregator aggregator)
         {
