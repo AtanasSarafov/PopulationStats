@@ -73,7 +73,8 @@ A .NET solution for simple tasks (population statistics aggregation), designed a
       
 ### Configuration
 
-- **appsettings.json**: Configure application settings, including API URLs and cache TTL. Example configuration:
+- **appsettings.json**: Configure application settings, including API URLs and cache TTL. 
+Example configuration:
   ```json
   {
     "CountriesApiUrl": "https://restcountries.com/v3.1/all",
@@ -82,8 +83,6 @@ A .NET solution for simple tasks (population statistics aggregation), designed a
       "DefaultConnection": "Data Source=path_to_your_database.db"
     }
   }
-
-
 ##  Overall Improvements Suggestions
 
 - **Caching**:
@@ -116,6 +115,20 @@ Add internationalization support to make the application usable in multiple lang
 
 - **API:**
 expose the provided features though API enpoints (OpenAPI generator could be use to generate code based on specification). Enhance the API with rate limiting and throttling.
+
+##  Known Issues
+
+- **At startup**:
+```bash
+Unhandled exception. System.IO.FileNotFoundException: 
+The configuration file 'appsettings.json' was not found and is not optional. 
+The expected physical path was '...\PopulationStats\appsettings.json'.
+```
+
+- **At DB scaffolding**:
+```bash
+The types of the properties specified for the foreign key {'StateId' : int} on entity type 'City (Dictionary<string, object>)' do not match the types of the properties in the principal key {'StateId' : string} on entity type 'State (Dictionary<string, object>)'. Provide properties that use the same types in the same order.
+```
 
 ## License
 
