@@ -1,46 +1,47 @@
 ﻿using PopulationStats.Core.Interfaces;
+using PopulationStats.Core.Models;
 
 namespace PopulationStats.Core.Services
 {
     public class ConcreteStatService : IStatService
     {
-        public List<Tuple<string, int>> GetCountryPopulations()
+        public List<CountryPopulation> GetCountryPopulations()
         {
-            // Pretend this calls a REST API somewhere
+            // Pretend this calls a REST API somewhere.
             return
             [
-                    Tuple.Create("India",1182105000),
-                Tuple.Create("United Kingdom",62026962),
-                Tuple.Create("Chile",17094270),
-                Tuple.Create("Mali",15370000),
-                Tuple.Create("Greece",11305118),
-                Tuple.Create("Armenia",3249482),
-                Tuple.Create("Slovenia",2046976),
-                Tuple.Create("Saint Vincent and the Grenadines",109284),
-                Tuple.Create("Bhutan",695822),
-                Tuple.Create("Aruba (Netherlands)",101484),
-                Tuple.Create("Maldives",319738),
-                Tuple.Create("Mayotte (France)",202000),
-                Tuple.Create("Vietnam",86932500),
-                Tuple.Create("Germany",81802257),
-                Tuple.Create("Botswana",2029307),
-                Tuple.Create("Togo",6191155),
-                Tuple.Create("Luxembourg",502066),
-                Tuple.Create("U.S. Virgin Islands (US)",106267),
-                Tuple.Create("Belarus",9480178),
-                Tuple.Create("Myanmar",59780000),
-                Tuple.Create("Mauritania",3217383),
-                Tuple.Create("Malaysia",28334135),
-                Tuple.Create("Dominican Republic",9884371),
-                Tuple.Create("New Caledonia (France)",248000),
-                Tuple.Create("Slovakia",5424925),
-                Tuple.Create("Kyrgyzstan",5418300),
-                Tuple.Create("Lithuania",3329039),
-                Tuple.Create("United States of America",309349689)
+                new CountryPopulation("India",1182105000),        //DB: India
+                new CountryPopulation("United Kingdom",62026962), //DB: United Kingdom
+                new CountryPopulation("Chile",17094270),          //DB: Chile
+                new CountryPopulation("Mali",15370000),           //DB: Mali
+                new CountryPopulation("Greece",11305118),
+                new CountryPopulation("Armenia",3249482),
+                new CountryPopulation("Slovenia",2046976),
+                new CountryPopulation("Saint Vincent and the Grenadines",109284),
+                new CountryPopulation("Bhutan",695822),
+                new CountryPopulation("Aruba (Netherlands)",101484),
+                new CountryPopulation("Maldives",319738),
+                new CountryPopulation("Mayotte (France)",202000),
+                new CountryPopulation("Vietnam",86932500),
+                new CountryPopulation("Germany",81802257),
+                new CountryPopulation("Botswana",2029307),
+                new CountryPopulation("Togo",6191155),
+                new CountryPopulation("Luxembourg",502066),
+                new CountryPopulation("U.S. Virgin Islands (US)",106267),
+                new CountryPopulation("Belarus",9480178),
+                new CountryPopulation("Myanmar",59780000),
+                new CountryPopulation("Mauritania",3217383),
+                new CountryPopulation("Malaysia",28334135),
+                new CountryPopulation("Dominican Republic",9884371),
+                new CountryPopulation("New Caledonia (France)",248000),
+                new CountryPopulation("Slovakia",5424925),
+                new CountryPopulation("Kyrgyzstan",5418300),
+                new CountryPopulation("Lithuania",3329039),
+                new CountryPopulation("United States of America",309349689) //DB: U.S.A.
             ];
         }
 
-        public Task<List<Tuple<string, int>>> GetCountryPopulationsAsync()
+        public Task<List<CountryPopulation>> GetCountryPopulationsAsync()
         {
             return Task.FromResult(GetCountryPopulations());
         }

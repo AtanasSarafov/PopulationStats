@@ -1,8 +1,10 @@
-﻿namespace PopulationStats.Core.Interfaces
+﻿using PopulationStats.Core.Models;
+
+namespace PopulationStats.Core.Interfaces
 {
-    interface IStatService
+    public interface IStatService
     {
-        List<Tuple<string, int>> GetCountryPopulations();
-        Task<List<Tuple<string, int>>> GetCountryPopulationsAsync();
+        List<CountryPopulation> GetCountryPopulations();
+        Task<List<CountryPopulation>> GetCountryPopulationsAsync();
     }
 }

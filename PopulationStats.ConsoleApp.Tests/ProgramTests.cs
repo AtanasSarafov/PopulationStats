@@ -1,11 +1,11 @@
 namespace PopulationStats.ConsoleApp.Tests
 {
-    public class UnitTest1
+    public class ProgramTests
     {
         [Fact]
         public void Test1()
         {
-
+            // TODO: Add tests.
         }
     }
 }
