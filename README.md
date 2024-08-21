@@ -53,7 +53,7 @@ A .NET solution for simple tasks (population statistics aggregation), designed a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/populationstats.git
+   git clone https://github.com/AtanasSarafov/populationstats.git
 
 2. Navigate to the project directory:
    ```bash
