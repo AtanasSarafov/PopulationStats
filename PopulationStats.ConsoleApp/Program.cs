@@ -1,129 +1,71 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PopulationStats.ConsoleApp.Models;
 using PopulationStats.Core.Interfaces;
-using PopulationStats.Core.Services;
-using PopulationStats.Data.Models;
 using System.Diagnostics;
 
 namespace PopulationStats.ConsoleApp
 {
-    internal class Program
+    public class Program
     {
+        private readonly IDIConfig _diConfig;
+
+        public Program(IDIConfig diConfig)
+        {
+            _diConfig = diConfig;
+        }
+
         static async Task Main()
         {
-            var serviceProvider = ConfigureServices();
+            var program = new Program(new DIConfig());
+            await program.Run();
+        }
 
-            using var scope = serviceProvider.CreateScope();
-            var services = scope.ServiceProvider;
-            var logger = services.GetRequiredService<ILogger<Program>>();
+        public async Task Run()
+        {
+            var serviceProvider = _diConfig.ConfigureServices();
 
-            try
+            using (var scope = serviceProvider.CreateScope())
             {
-                var aggregator = services.GetRequiredService<IPopulationAggregator>();
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var aggregator = services.GetRequiredService<IPopulationAggregator>();
 
-                await DisplayPopulationDataAsync(aggregator, logger);
+                    Console.WriteLine($"--- Population counts per country ---");
+                    await PrintTotalPopulationByCountry(aggregator);
+
+                    Console.WriteLine($"--- Population counts per country [FROM CACHE] ---");
+                    await PrintTotalPopulationByCountry(aggregator);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while running the population aggregation.");
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred while running the population aggregation.");
-            }
         }
 
-        private static ServiceProvider ConfigureServices()
+        public static async Task PrintTotalPopulationByCountry(IPopulationAggregator aggregator)
         {
-            var configuration = BuildConfiguration();
-
-            var services = new ServiceCollection();
-            services.AddSingleton(configuration);
-
-            // Logging setup
-            services.AddLogging(configure => configure.AddConsole());
-
-            // Database setup
-            services.AddDbContext<PopulationStatsDbContext>(options =>
-                options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
-
-            // Caching and services registration
-            services.AddMemoryCache();
-            services.AddTransient<IStatService, ConcreteStatService>();
-            services.AddSingleton<IStatService, RealWorldStatService>(provider =>
-            {
-                var cache = provider.GetRequiredService<IMemoryCache>();
-                var logger = provider.GetRequiredService<ILogger<RealWorldStatService>>();
-                return new RealWorldStatService(cache, configuration, logger);
-            });
-
-            // Population Aggregator setup
-            services.AddTransient<IPopulationAggregator, PopulationAggregator>(provider =>
-            {
-                var context = provider.GetRequiredService<PopulationStatsDbContext>();
-                var statServices = provider.GetServices<IStatService>().ToList();
-                return new PopulationAggregator(context, statServices);
-            });
-
-            return services.BuildServiceProvider();
-        }
-
-        private static IConfiguration BuildConfiguration()
-        {
-            return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-        }
-
-        private static async Task DisplayPopulationDataAsync(IPopulationAggregator aggregator, ILogger logger)
-        {
-            logger.LogInformation("Starting population aggregation.");
-
-            await MeasureAndDisplayPopulationDataAsync(
-                aggregator.GetTotalPopulationByCountryAsync,
-                "Population counts per country",
-                logger
-            );
-
-            await MeasureAndDisplayPopulationDataAsync(
-               aggregator.GetTotalPopulationByCountryAsync,
-               "[WITH CASHE] Population counts per country",
-               logger
-           );
-
-            logger.LogInformation("Population aggregation completed.");
-        }
-
-        private static async Task MeasureAndDisplayPopulationDataAsync(
-            Func<Task<Dictionary<string, int>>> fetchPopulationData,
-            string header,
-            ILogger logger)
-        {
-            logger.LogInformation($"--- {header} ---");
-
             var stopwatch = Stopwatch.StartNew();
-            var populationData = await fetchPopulationData();
+            var totalPopulations = await aggregator.GetTotalPopulationByCountryAsync();
             stopwatch.Stop();
 
-            DisplayPopulationByCountry(populationData);
-            logger.LogInformation($"Data aggregation completed in {stopwatch.ElapsedMilliseconds} ms.\n");
-        }
-
-        private static void DisplayPopulationByCountry(Dictionary<string, int> populationData)
-        {
-            foreach (var (country, population) in populationData)
+            foreach (var kvp in totalPopulations)
             {
-                Console.WriteLine($"{country}: {population}");
+                Console.WriteLine($"{kvp.Key}: {kvp.Value}");
             }
+            Console.WriteLine($"\nData aggregation completed in {stopwatch.ElapsedMilliseconds} ms.\n");
         }
 
         // TODO: For testing purposes. Remove when not needed.
-        // Prints the population counts in  hierarchical format.
-        private static async Task PrintPopulationDetails(IPopulationAggregator aggregator)
+        // Prints the population counts in  hierarchical format:
+        // Country(Population total count)
+        //    State(Population count)
+        //       City(Population count)
+        public static async Task PrintPopulationDetails(IPopulationAggregator aggregator)
         {
-            // Country(Population total count)
-            //    State(Population count)
-            //       City(Population count)
             var stopwatch = Stopwatch.StartNew();
             var populationDetails = await aggregator.GetPopulationDetailsAsync();
             stopwatch.Stop();
