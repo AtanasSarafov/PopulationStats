@@ -98,6 +98,8 @@ Ensure that logs are comprehensive and include enough context for debugging.
 
 - **Testing**:
 Implement integration tests to verify the interactions between components and external systems.
+ - Using Docker: testing against a real database, consider running a lightweight SQL database like PostgreSQL or SQL Server in a Docker container. This approach is closer to production and can help catch more subtle issues related to the database engine.
+   (use tools like localstack to mock the needed cloud resources, if any)
 
 ## Suggested New Features
 
