@@ -19,17 +19,26 @@ jobs:
       with:
         dotnet-version: '8.0.202'
 
-    - name: Install dependencies
+    - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build solution
-      run: dotnet build --no-restore
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
 
     - name: Run tests with coverage
-      run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory "./TestResults" /p:CollectCoverage=true /p:CoverletOutput=./TestResults/Coverage/ /p:CoverletOutputFormat=cobertura
+      run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=cobertura
 
-    - name: List TestResults directory contents
-      run: ls -R ./TestResults
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate coverage report
+      run: reportgenerator -reports:./TestResults/**/coverage.cobertura.xml -targetdir:./TestResults/CoverageReport -reporttypes:Html
+
+    - name: Upload HTML coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: html-coverage-report
+        path: ./TestResults/CoverageReport
 
     - name: Publish coverage report
       uses: actions/upload-artifact@v3
