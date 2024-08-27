@@ -26,10 +26,13 @@ jobs:
       run: dotnet build --no-restore
 
     - name: Run tests with coverage
-      run: dotnet test --no-build --collect:"XPlat Code Coverage"
+      run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory "./TestResults" /p:CollectCoverage=true /p:CoverletOutput=./TestResults/Coverage/ /p:CoverletOutputFormat=cobertura
+
+    - name: List TestResults directory contents
+      run: ls -R ./TestResults
 
     - name: Publish coverage report
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
-        path: TestResults/Coverage/
+        path: ./TestResults/Coverage/
